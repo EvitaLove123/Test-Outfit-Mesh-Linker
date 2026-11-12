@@ -19,11 +19,36 @@
 <section class="card"><h2>3. Skeleton linking</h2><div id="status" class="status">Waiting for a VRM Body and Outfit.</div><div class="progress"><div id="progressBar"></div></div><div class="actions"><button id="transferBtn" disabled>Transfer Weights & Link Outfit</button></div><label class="check"><input id="confirmPose" type="checkbox"> I have aligned the Outfit to the Body in the same rest pose and coordinate space.</label><p class="hint">Surface transfer finds the closest Body triangle and interpolates its skin influences using barycentric coordinates. For performance on mobile, the source surface is sampled and the transfer runs in chunks.</p></section>
 <section class="card"><h2>4. Export & compatibility</h2><div id="exportStatus" class="status warn">VRM export is not enabled yet. This build can load VRM 0.x / 1.0 and perform a real in-memory weight transfer, but it does not yet serialize the result back into a standards-compliant VRM file.</div><p class="hint">No UniVRM is used. The exporter must preserve the original VRM version, humanoid mapping, expressions, materials, spring bones / secondary nodes, colliders, and valid glTF skin data. A plain GLB export must not be mislabeled as VRM.</p></section>
 </main><footer>Test Outfit-Mesh-Linker · Three.js + three-vrm loader · Local-only processing</footer>
+<script>
+(function(){
+  function showBootError(message){
+    var box=document.getElementById('status');
+    if(box){box.className='status warn';box.textContent='APP STARTUP ERROR: '+message+'\\n\\nThis happens before model loading. Check the CDN/module connection or browser WebGL support.';}
+  }
+  window.addEventListener('error',function(e){
+    var msg=e.message||'A script or module failed to load';
+    if(e.filename) msg+='\\nSource: '+e.filename;
+    showBootError(msg);
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var reason=e.reason;
+    showBootError(reason&&reason.message?reason.message:String(reason||'Unknown rejected promise'));
+  });
+  setTimeout(function(){
+    if(!window.__outfitLinkerReady && !window.__outfitLinkerModuleLoaded){
+      showBootError('The Three.js / three-vrm JavaScript module did not start. This is usually a CDN/network block or unsupported module import.');
+    }else if(!window.__outfitLinkerReady){
+      showBootError('The app module loaded but initialization did not finish. The error above should identify the failing step.');
+    }
+  },10000);
+})();
+</script>
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {VRMLoaderPlugin,VRMUtils} from '@pixiv/three-vrm';
+window.__outfitLinkerModuleLoaded=true;
 const $=id=>document.getElementById(id),host=$('viewport'),status=$('status'),bar=$('progressBar');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xf1f5fa);
 const camera=new THREE.PerspectiveCamera(45,1,.01,1000);camera.position.set(0,1.3,3.8);
@@ -49,4 +74,5 @@ $('bodyToggle').addEventListener('click',e=>{bodyVisible=!bodyVisible;if(bodyRoo
 $('outfitToggle').addEventListener('click',e=>{outfitVisible=!outfitVisible;if(outfitRoot)outfitRoot.visible=outfitVisible;linkedMeshes.forEach(m=>m.visible=outfitVisible);e.currentTarget.textContent=outfitVisible?'Hide Outfit':'Show Outfit'});
 $('wireToggle').addEventListener('click',e=>{wire=!wire;scene.traverse(o=>{if(o.isMesh){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m)m.wireframe=wire})}});e.currentTarget.textContent='Wireframe: '+(wire?'On':'Off')});
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();vrm?.update(dt);controls.update();renderer.render(scene,camera)}animate();
+window.__outfitLinkerReady=true;
 </script></body></html>
