@@ -27,6 +27,6 @@ A mobile-friendly, browser-side prototype for transferring outfit skin weights o
 5. Inspect the deformation and fit in the preview.
 
 ## Technical
-- Three.js 0.160.0, GLTFLoader, OrbitControls.
+- Three.js 0.180.0, GLTFLoader, OrbitControls.
 - `@pixiv/three-vrm` v3 loader for VRM 0.x / 1.0 import.
 - No UniVRM dependency.
